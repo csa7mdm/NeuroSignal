@@ -1,0 +1,8 @@
+{
+  "name": "NeuroSignal",
+  "description": "Real-time multimodal body language and voice analysis application with AI-powered insights.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
