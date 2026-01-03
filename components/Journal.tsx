@@ -43,9 +43,9 @@ const Journal: React.FC<JournalProps> = ({ language }) => {
   };
 
   const exportCSV = (entry: SessionData) => {
-    const headers = "Timestamp,Anxiety,Stress,Confidence,Deception\n";
+    const headers = "Timestamp,Anxiety,Stress,Confidence,Deception,Aggression,Boredom,Empathy,GazeDeviation,PupilDilation,BlinkRate\n";
     const rows = entry.timeline.map(t => 
-      `${t.timestamp},${t.anxiety.toFixed(2)},${t.stress.toFixed(2)},${t.confidence.toFixed(2)},${t.deception.toFixed(2)}`
+      `${t.timestamp},${t.anxiety.toFixed(2)},${t.stress.toFixed(2)},${t.confidence.toFixed(2)},${t.deception.toFixed(2)},${t.aggression?.toFixed(2) || 0},${t.boredom?.toFixed(2) || 0},${t.empathy?.toFixed(2) || 0},${t.gazeDeviation?.toFixed(2) || 0},${t.pupilDilation?.toFixed(2) || 0},${t.blinkRate?.toFixed(2) || 0}`
     ).join("\n");
     
     const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(headers + rows);
@@ -72,15 +72,23 @@ const Journal: React.FC<JournalProps> = ({ language }) => {
     doc.text("Summary Metrics", 10, 65);
     
     doc.setFontSize(12);
-    doc.text(`Anxiety Avg: ${entry.averages.anxiety.toFixed(1)}%`, 10, 75);
-    doc.text(`Stress Avg: ${entry.averages.stress.toFixed(1)}%`, 10, 85);
-    doc.text(`Confidence Avg: ${entry.averages.confidence.toFixed(1)}%`, 10, 95);
-    doc.text(`Deception Indicators: ${entry.averages.deception.toFixed(1)}%`, 10, 105);
+    let yPos = 75;
+    doc.text(`Anxiety Avg: ${entry.averages.anxiety.toFixed(1)}%`, 10, yPos); yPos += 10;
+    doc.text(`Stress Avg: ${entry.averages.stress.toFixed(1)}%`, 10, yPos); yPos += 10;
+    doc.text(`Confidence Avg: ${entry.averages.confidence.toFixed(1)}%`, 10, yPos); yPos += 10;
+    doc.text(`Deception Indicators: ${entry.averages.deception.toFixed(1)}%`, 10, yPos); yPos += 10;
+    doc.text(`Aggression Avg: ${entry.averages.aggression?.toFixed(1) || 0}%`, 10, yPos); yPos += 10;
+    doc.text(`Boredom Avg: ${entry.averages.boredom?.toFixed(1) || 0}%`, 10, yPos); yPos += 10;
+    doc.text(`Empathy Avg: ${entry.averages.empathy?.toFixed(1) || 0}%`, 10, yPos); yPos += 10;
+    doc.text(`Gaze Deviation Avg: ${entry.averages.gazeDeviation?.toFixed(1) || 0}%`, 10, yPos); yPos += 10;
+    doc.text(`Pupil Dilation Avg: ${entry.averages.pupilDilation?.toFixed(1) || 0}%`, 10, yPos); yPos += 10;
+    doc.text(`Blink Rate Avg: ${entry.averages.blinkRate?.toFixed(1) || 0}%`, 10, yPos); yPos += 15;
 
     if (entry.userNotes) {
-        doc.text("Notes:", 10, 120);
+        doc.text("Notes:", 10, yPos);
+        yPos += 10;
         const splitNotes = doc.splitTextToSize(entry.userNotes, 180);
-        doc.text(splitNotes, 10, 130);
+        doc.text(splitNotes, 10, yPos);
     }
 
     doc.save(`session_${entry.id}.pdf`);
@@ -142,22 +150,42 @@ const Journal: React.FC<JournalProps> = ({ language }) => {
                       <p className="text-xs text-slate-500 mb-1">{t.deception}</p>
                       <p className="text-xl font-bold text-purple-400">{entry.averages.deception.toFixed(0)}%</p>
                     </div>
+                     {/* New Metrics */}
+                     <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 text-center">
+                      <p className="text-xs text-slate-500 mb-1">{t.aggression}</p>
+                      <p className="text-xl font-bold text-red-700">{entry.averages.aggression?.toFixed(0) || 0}%</p>
+                    </div>
+                    <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 text-center">
+                      <p className="text-xs text-slate-500 mb-1">{t.boredom}</p>
+                      <p className="text-xl font-bold text-slate-400">{entry.averages.boredom?.toFixed(0) || 0}%</p>
+                    </div>
+                    <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 text-center">
+                      <p className="text-xs text-slate-500 mb-1">{t.empathy}</p>
+                      <p className="text-xl font-bold text-teal-400">{entry.averages.empathy?.toFixed(0) || 0}%</p>
+                    </div>
+                    {/* Eye Tracking */}
+                    <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 text-center">
+                      <p className="text-xs text-slate-500 mb-1">{t.gaze_deviation}</p>
+                      <p className="text-xl font-bold text-blue-400">{entry.averages.gazeDeviation?.toFixed(0) || 0}%</p>
+                    </div>
                   </div>
                   
-                  {/* Mini Chart - Added min-w-0 */}
-                  <div className="h-40 mb-4 w-full min-w-0">
-                     <ResponsiveContainer width="100%" height="100%">
-                       <LineChart data={entry.timeline}>
-                         <Line type="monotone" dataKey="anxiety" stroke="#ef4444" dot={false} strokeWidth={2} />
-                         <Line type="monotone" dataKey="confidence" stroke="#22c55e" dot={false} strokeWidth={2} />
-                         <Tooltip 
-                            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b' }} 
-                            labelStyle={{ color: '#94a3b8' }}
-                          />
-                         <XAxis dataKey="timestamp" hide />
-                         <YAxis hide domain={[0, 100]} />
-                       </LineChart>
-                     </ResponsiveContainer>
+                  {/* Mini Chart - Layout Fixed */}
+                  <div className="h-40 mb-4 w-full min-w-0 relative">
+                     <div className="absolute inset-0">
+                       <ResponsiveContainer width="100%" height="100%">
+                         <LineChart data={entry.timeline}>
+                           <Line type="monotone" dataKey="anxiety" stroke="#ef4444" dot={false} strokeWidth={2} />
+                           <Line type="monotone" dataKey="confidence" stroke="#22c55e" dot={false} strokeWidth={2} />
+                           <Tooltip 
+                              contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b' }} 
+                              labelStyle={{ color: '#94a3b8' }}
+                            />
+                           <XAxis dataKey="timestamp" hide />
+                           <YAxis hide domain={[0, 100]} />
+                         </LineChart>
+                       </ResponsiveContainer>
+                     </div>
                   </div>
 
                   {entry.userNotes && (

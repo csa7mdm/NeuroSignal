@@ -13,6 +13,12 @@ export interface EmotionData {
   deception: number;
   confidence: number;
   stress: number;
+  aggression: number;
+  boredom: number;
+  empathy: number;
+  gazeDeviation: number;
+  pupilDilation: number;
+  blinkRate: number;
 }
 
 export interface FrameSnapshot {
@@ -37,6 +43,12 @@ export interface SessionData {
     deception: number;
     confidence: number;
     stress: number;
+    aggression: number;
+    boredom: number;
+    empathy: number;
+    gazeDeviation: number;
+    pupilDilation: number;
+    blinkRate: number;
   };
 }
 
@@ -53,6 +65,7 @@ export interface ChatMessage {
   id: string;
   role: 'user' | 'model';
   text: string;
+  imageUrl?: string;
   timestamp: number;
 }
 
@@ -61,4 +74,14 @@ export interface TrainingQuestion {
   emotion: string;
   description: string;
   options: string[];
+}
+
+export interface OpenRouterModel {
+  id: string;
+  name: string;
+  pricing: {
+    prompt: string;
+    completion: string;
+  };
+  context_length: number;
 }

@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NeuroSignal - Behavior Analysis</title>
+    <link rel="manifest" href="./manifest.json" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -67,5 +68,24 @@
 </head>
   <body class="bg-slate-950 text-slate-100 overflow-hidden">
     <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          // Use standard relative path. The try/catch block handles environments
+          // where SWs are blocked or origins don't match (e.g., iframes in cloud IDEs).
+          navigator.serviceWorker.register('./sw.js')
+            .then(registration => {
+              console.log('SW registered with scope:', registration.scope);
+            })
+            .catch(error => {
+              // Silently ignore origin mismatch errors common in preview environments
+              if (error.message && (error.message.includes('origin') || error.message.includes('security'))) {
+                return;
+              }
+              console.warn('Service Worker registration failed:', error);
+            });
+        });
+      }
+    </script>
   </body>
 </html>

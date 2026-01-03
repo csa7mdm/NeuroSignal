@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Target, CheckCircle, XCircle, RefreshCw, Play } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Target, CheckCircle, XCircle, RefreshCw, Play, Zap, Brain, Loader2, Image as ImageIcon } from 'lucide-react';
 import { Language } from '../types';
 import { TRANSLATIONS, TRAINING_QUESTIONS } from '../constants';
+import { generateTrainingImage } from '../services/geminiService';
 
 interface TrainingProps {
   language: Language;
@@ -13,9 +14,33 @@ const Training: React.FC<TrainingProps> = ({ language }) => {
   const [score, setScore] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isFinished, setIsFinished] = useState(false);
+  const [difficulty, setDifficulty] = useState<'easy' | 'hard'>('easy');
+  
+  // Image Generation State
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const t = TRANSLATIONS[language];
   const currentQuestion = TRAINING_QUESTIONS[currentQuestionIndex];
+
+  // Effect to generate image when question changes
+  useEffect(() => {
+    if (!isPlaying || isFinished) return;
+
+    const fetchImage = async () => {
+        setIsGenerating(true);
+        setGeneratedImage(null);
+        
+        // Use AI to generate a fresh image for this specific question/emotion
+        // This ensures every playthrough is unique
+        const imageUrl = await generateTrainingImage(currentQuestion.description, difficulty);
+        
+        setGeneratedImage(imageUrl);
+        setIsGenerating(false);
+    };
+
+    fetchImage();
+  }, [currentQuestionIndex, isPlaying, difficulty, isFinished]);
 
   const handleStart = () => {
     setIsPlaying(true);
@@ -23,6 +48,7 @@ const Training: React.FC<TrainingProps> = ({ language }) => {
     setCurrentQuestionIndex(0);
     setIsFinished(false);
     setSelectedOption(null);
+    setGeneratedImage(null);
   };
 
   const handleOptionSelect = (option: string) => {
@@ -46,12 +72,28 @@ const Training: React.FC<TrainingProps> = ({ language }) => {
     return (
       <div className="flex flex-col items-center justify-center h-full p-6 text-center">
         <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-6 border border-slate-700">
-            <Target className="w-10 h-10 text-primary-400" />
+            <Brain className="w-10 h-10 text-primary-400" />
         </div>
         <h2 className="text-3xl font-bold text-white mb-3">{t.training_mode}</h2>
         <p className="text-slate-400 max-w-md mb-8 leading-relaxed">
           {t.training_desc}
         </p>
+
+        <div className="flex gap-4 mb-8 bg-slate-900 p-2 rounded-xl border border-slate-800">
+             <button 
+                onClick={() => setDifficulty('easy')}
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${difficulty === 'easy' ? 'bg-green-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+             >
+                Easy Mode
+             </button>
+             <button 
+                onClick={() => setDifficulty('hard')}
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${difficulty === 'hard' ? 'bg-red-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+             >
+                Hard Mode (Micro-Expressions)
+             </button>
+        </div>
+
         <button
           onClick={handleStart}
           className="px-8 py-3 bg-primary-600 hover:bg-primary-500 text-white rounded-full font-bold shadow-lg shadow-primary-500/20 transition-all flex items-center gap-2"
@@ -87,7 +129,7 @@ const Training: React.FC<TrainingProps> = ({ language }) => {
       <div className="w-full flex items-center justify-between mb-8">
         <div className="flex items-center gap-2 text-slate-400">
             <Target className="w-5 h-5 text-primary-400" />
-            <span className="text-sm font-medium">{t.training_mode}</span>
+            <span className="text-sm font-medium">{t.training_mode} ({difficulty.toUpperCase()})</span>
         </div>
         <span className="text-slate-500 font-mono text-sm">
             {currentQuestionIndex + 1} / {TRAINING_QUESTIONS.length}
@@ -95,12 +137,32 @@ const Training: React.FC<TrainingProps> = ({ language }) => {
       </div>
 
       <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-xl flex-1 flex flex-col">
-        {/* Visual Placeholder (Simulated Video/Image) */}
-        <div className="w-full h-48 bg-slate-950 rounded-xl mb-6 flex items-center justify-center border border-slate-800 relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-slate-950"></div>
-            <div className="relative z-10 text-center p-4">
-                <p className="text-lg font-medium text-slate-200 italic">"{currentQuestion.description}"</p>
-            </div>
+        {/* Dynamic Image Display */}
+        <div className="w-full h-64 bg-slate-950 rounded-xl mb-6 flex items-center justify-center border border-slate-800 relative overflow-hidden group">
+            {isGenerating ? (
+                <div className="flex flex-col items-center gap-3 text-slate-500">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+                    <span className="text-xs font-mono animate-pulse">GENERATING HUMAN PROFILE...</span>
+                </div>
+            ) : generatedImage ? (
+                <img 
+                    src={generatedImage} 
+                    alt="AI Generated Emotion" 
+                    className="w-full h-full object-cover transition-transform hover:scale-105 duration-700" 
+                />
+            ) : (
+                <div className="flex flex-col items-center gap-3 text-slate-500">
+                     <ImageIcon className="w-10 h-10 opacity-50" />
+                     <span className="text-xs">Image unavailable</span>
+                </div>
+            )}
+            
+            {/* Show Text Hint only if generating failed or loading */}
+            {!generatedImage && !isGenerating && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-center">
+                    <p className="text-lg font-medium text-slate-200 italic">"{currentQuestion.description}"</p>
+                </div>
+            )}
         </div>
 
         <h3 className="text-xl font-bold text-white mb-6 text-center">{t.question}: What emotion is being displayed?</h3>
@@ -121,8 +183,8 @@ const Training: React.FC<TrainingProps> = ({ language }) => {
               <button
                 key={option}
                 onClick={() => handleOptionSelect(option)}
-                disabled={!!selectedOption}
-                className={`p-4 rounded-xl border transition-all font-medium flex items-center justify-between ${btnClass}`}
+                disabled={!!selectedOption || isGenerating}
+                className={`p-4 rounded-xl border transition-all font-medium flex items-center justify-between ${btnClass} disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {option}
                 {showCorrect && <CheckCircle className="w-5 h-5" />}

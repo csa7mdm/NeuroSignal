@@ -1,0 +1,20 @@
+{
+  "short_name": "NeuroSignal",
+  "name": "NeuroSignal AI Analysis",
+  "icons": [
+    {
+      "src": "https://esm.sh/lucide-static@0.379.0/icons/activity.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://esm.sh/lucide-static@0.379.0/icons/activity.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0f172a",
+  "background_color": "#020617"
+}

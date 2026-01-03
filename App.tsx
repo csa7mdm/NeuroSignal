@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { Activity, BookOpen, Brain, Globe, Target, LogOut, User as UserIcon } from 'lucide-react';
+import { Activity, BookOpen, Brain, Globe, Target, LogOut, Settings as SettingsIcon, FileVideo } from 'lucide-react';
 import AnalysisDisplay from './components/AnalysisDisplay';
 import Library from './components/Library';
 import Journal from './components/Journal';
 import Login from './components/Login';
 import Training from './components/Training';
+import Settings from './components/Settings';
+import VideoAnalysis from './components/VideoAnalysis';
 import { Language } from './types';
 import { TRANSLATIONS } from './constants';
 import { useAuth } from './contexts/AuthContext';
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<'analysis' | 'journal' | 'library' | 'training'>('analysis');
+  const [currentView, setCurrentView] = useState<'analysis' | 'video_analysis' | 'journal' | 'library' | 'training' | 'settings'>('analysis');
   const [language, setLanguage] = useState<Language>('en');
   const { user, logout, isLoading } = useAuth();
 
@@ -45,6 +47,18 @@ const App: React.FC = () => {
             <Activity className="w-6 h-6" />
           </button>
           
+          <button
+            onClick={() => setCurrentView('video_analysis')}
+            className={`p-3 rounded-xl transition-all ${
+              currentView === 'video_analysis' 
+                ? 'bg-slate-800 text-primary-400 shadow-inner' 
+                : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'
+            }`}
+            title={t.nav_video_analysis}
+          >
+            <FileVideo className="w-6 h-6" />
+          </button>
+
           <button
             onClick={() => setCurrentView('journal')}
             className={`p-3 rounded-xl transition-all ${
@@ -83,6 +97,18 @@ const App: React.FC = () => {
         </div>
 
         <div className="mt-auto flex flex-col items-center gap-4">
+          <button
+            onClick={() => setCurrentView('settings')}
+            className={`p-3 rounded-xl transition-all ${
+              currentView === 'settings' 
+                ? 'bg-slate-800 text-primary-400 shadow-inner' 
+                : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'
+            }`}
+            title={t.nav_settings}
+          >
+            <SettingsIcon className="w-6 h-6" />
+          </button>
+
           <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-primary-400 cursor-help" title={user.name}>
              {user.name.charAt(0).toUpperCase()}
           </div>
@@ -114,9 +140,11 @@ const App: React.FC = () => {
 
          <div className="relative z-10 h-full">
             {currentView === 'analysis' && <AnalysisDisplay language={language} />}
+            {currentView === 'video_analysis' && <VideoAnalysis language={language} />}
             {currentView === 'journal' && <Journal language={language} />}
             {currentView === 'library' && <Library language={language} />}
             {currentView === 'training' && <Training language={language} />}
+            {currentView === 'settings' && <Settings language={language} />}
          </div>
       </main>
     </div>
